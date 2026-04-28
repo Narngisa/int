@@ -147,10 +147,11 @@ if not suite_select or suite_select == 0 then
         local x = int.new(x)
         return x:ln()
     end)
+    print("[NOTE] int.exp() function has been override because it take too much time and can be overflow!")
     benchmark("exp", function(x, _)
         local x = int.new(x)
         return x:exp()
-    end)
+    end, nil, 5, 3)
 
     print("\nUsing Equation-Suite")
     benchmark("equal", function(x, y)

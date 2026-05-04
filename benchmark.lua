@@ -15,11 +15,12 @@ local int = require("int")
 local loaded = os.clock()
 
 os.execute("cls")
-print(("\nUsing Benchmark.\nUsing module version: %s (%s)"):format(int._VERSION or "UNKNOW", _VERSION))
-local MAXLOOP = arg[1] and tonumber(arg[1]:match("(%d+)$")) or 700
+local MAXLOOP = arg[1] and tonumber(arg[1]:match("(%d+)$")) or 500
+local MAXNLEN = arg[2] and tonumber(arg[2]:match("(%d+)$")) or 500
 local ALLSAME = false
 local n, c = {}, {}
 
+print(("\nUsing Benchmark. %s/%s\nUsing module version: %s (%s)"):format(MAXLOOP, MAXNLEN, int._VERSION or "UNKNOW", _VERSION))
 local example_result = {}
 local avg = {i = 0, avg = 0}
 local operation_start = os.clock()
@@ -28,7 +29,7 @@ for i = 1, MAXLOOP do
         if not ALLSAME then
             n, c = {}, {}
         end
-        for _ = 1, arg[2] and tonumber(arg[2]:match("(%d+)$")) or 300 do
+        for _ = 1, MAXNLEN do
             n[#n + 1] = math.random(0, 9)
             c[#c + 1] = math.random(0, 9)
         end

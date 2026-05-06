@@ -8,7 +8,10 @@
 The [**int object**](../README.md#int-object) is represented as a table in Lua, designed for calculation purposes within the int module. This table includes numerical data and calculation-related information, and it supports a metatable to facilitate ease of use.
 
 ```lua
-function int.new(...) -- (string|number) For only create. alway use default size! **CHUNK SIZE SHOULD BE SAME WHEN CALCULATE**
+---For create multiple int object in one times.
+---@param ... string|number
+---@return table
+function int.new(...)
 ```
 
 **Parameter:**

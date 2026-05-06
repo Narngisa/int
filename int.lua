@@ -2,7 +2,7 @@
 --                 ULTIMATE INT                   --
 ----------------------------------------------------
 -- MODULE VERSION: 186
--- BUILD  VERSION: 186.7.1 (04/05/2026) dd:mm:yyyy
+-- BUILD  VERSION: 186.7.2 (06/05/2026) dd:mm:yyyy
 -- USER FEATURE: 26/11/2025
 -- DEV  FEATURE: 27/12/2025
 -- AUTHOR: SupTan85
@@ -27,7 +27,7 @@ local master = {
 
             DEFAULT = intcur[1], -- recommend
         },
-
+        --#region
         OPTION = {
             --[[ MASTER DIVISION | BYPASS GENERATE FLOATING POINT >>
                 How dose it work :
@@ -48,13 +48,12 @@ local master = {
                 By SupTan85
             << BUILD-IN >>]]
             MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS = true,
-            MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS_BUFF_MODE = false, -- use buff-accurate for more accuracy. note: very slow but high accuracy!
         },
 
         ACCURACY_LIMIT = {
             -- MASTER FUNCTION CONFIG --
             MASTER_CALCULATE_DIV_MAXITERATIONS = 15, -- 15
-            MASTER_CALCULATE_DIV_BUFF_ACCURATE = 2, -- 2
+            MASTER_CALCULATE_DIV_BUFF_ACCURATE = 4, -- 4
             MASTER_DEFAULT_FRACT_LIMIT_DIV = 14, -- 14
 
             -- MEDIA FUNCTION CONFIG --
@@ -70,14 +69,14 @@ local master = {
             MEDIA_DEFAULT_SQRTROOT_MAXITERATIONS = 15, -- 15
             MEDIA_DEFAULT_SQRTROOT_FRACT_LIMIT = 14, -- 14
         },
-
+        --#endregion
         -- SYSTEM CONFIG ! Internal use only, Do not modify. ! --
         MAXIMUM_SIZE_PERCHUNK = intcur[1], -- stable size is 9
         MAXIMUM_LUA_INTEGER = intcur[2] -- math.maxinteger
     },
 
     _VERSION = "186",
-    _BUILD = "186.7.1"
+    _BUILD = "186.7.2"
 }
 
 local ISDEBUG = false -- mute everything that can be mute.
@@ -86,7 +85,7 @@ local OPTION = master._config.OPTION
 local ACCURACY_LIMIT = master._config.ACCURACY_LIMIT
 local OBJECT_CODENAME = "int object"
 local OBJECT_PROFILE = ({(OBJECT_CODENAME):gsub("%s+", "-")})[1] -- auto create profile
-local FEATURE_METATABLE_LEN = #setmetatable({}, {__len = function() return 32 end}) == 32 -- Lua >= 5.2 *optimize feature for newer lua version
+
 local CONSTANT_LN2_DLEN = math.min(math.max(intcur[1] * 2, 14), 18)
 local CONSTANT_LN2 = "0."..("693147180559945309"):sub(1, CONSTANT_LN2_DLEN)
 
@@ -103,13 +102,7 @@ local function istableobj(...) -- All value are table/int-object, else return fa
         local itype = type(v)
         if itype ~= OBJECT_CODENAME then
             if itype ~= "table" then
-                if itype == "userdata" then
-                    if getmetatable(v).__name ~= OBJECT_CODENAME then
-                        return false
-                    end
-                else
-                    return false
-                end
+                return false
             elseif not v._size then
                 return false
             end
@@ -245,26 +238,22 @@ master.custom = {
         return x, x._dlen, tonumber(lastcut_num)
     end,
 
-    _refresh = function(x, lu, endp) -- refresh all chunk that should to be, by fast `ADD` process.
+    _addcarry = function(x, sel, carry) -- add number in select chunk and refresh it all.
         -- BUILD 186.7
-        lu = lu or 0
-        local s, endp = x._size or 1, endp or x._dlen or 1
-        local re
-        local ca, sl = tostring(x[endp]):match("(%d-)0*$"), floor(10 ^ s)
-        re = tonumber(endp < 1 and ca..("0"):rep(s - #ca) or ca) + (lu * floor(10 ^ (s - #ca)))
-        x[endp], lu = re % sl, floor(re / sl)
-        if x[endp] == 0 then
-            x._dlen, x[endp] = x._dlen + 1, nil
+        local s = 10 ^ (x._size)
+        while carry > 0 do
+            local data = (x[sel] or 0) + carry
+            carry = floor(data / s)
+            x[sel], sel = data % s, sel + 1
         end
-        while lu ~= 0 do
-            endp = endp + 1
-            re = (x[endp] or 0) + lu
-            x[endp], lu = re % sl, floor(re / sl)
-            if x[endp] == 0 then
-                x._dlen, x[endp] = x._dlen + 1, nil
+        for i = x._dlen or 1, 0 do
+            if (x[i] or 0) ~= 0 then
+                x._dlen = i
+                break
+            else
+                x[i] = nil
             end
         end
-        x._dlen = max(endp, x._dlen)
         return x
     end,
 
@@ -290,7 +279,7 @@ master.custom = {
         local s = x._size
         local x, endp, lastcut_num = self._cfloor(x, length)
         if endp < 1 and lastcut_num then
-            x = lastcut_num > (center and center or 5) and self._refresh(x, 10 ^ (length % s), endp) or x
+            x = lastcut_num > (center and center or 5) and self._addcarry(x, endp, 10 ^ ((s - length) % s)) or x
         end
         return x
     end
@@ -612,21 +601,6 @@ master.calculate = {
         return result
     end,
 
-    _var_mirror = FEATURE_METATABLE_LEN and function(d)
-        return setmetatable({}, {__index = d, __len = function() return #d end})
-    ---@diagnostic disable-next-line: deprecated
-    end or (newproxy and function(d)
-        ---@diagnostic disable-next-line: deprecated
-        local proxy = newproxy(true)
-        local meta = getmetatable(proxy)
-        local data = {}
-
-        meta.__len = function() return #d end
-        meta.__index = function(_, i) return data[i] or d[i] end
-        meta.__newindex = data
-        meta.__name = OBJECT_CODENAME
-        return proxy
-    end or master.copy),
     div = function(self, a, b, s, f, l) -- _size maxiumum *1 (`f` The maxiumum number of decimal part, `l` The maximum number of iterations to perform.) **chunk size should be same**
         -- BUILD 186.7
         self._verify(a, b, master._config.MAXIMUM_SIZE_PERCHUNK, "DIV")
@@ -645,9 +619,6 @@ master.calculate = {
                 L, lastpoint = #L >= 4 and L:sub(1, -2) or L, #L >= 4 and L:sub(-2, -2) or (#L > 1 and L:sub(-1, -1) or L)
                 -- print(p, L, R, lastpoint)
                 local S = #L:match("^(%d+)%.?")
-                if R > master._config.MAXIMUM_LUA_INTEGER then
-                    error("[DIV] OVERFLOW | division function can't handle this number, or something went wrong. (%s > %s)")
-                end
                 return ("0."..("0"):rep(tonumber(R) - S)..(#L > 1 and L:gsub("%.", "") or L)):sub(1, -2)
             elseif p ~= "0.0" and p ~= "0" then
                 if #p > 13 then
@@ -663,7 +634,7 @@ master.calculate = {
             d = FLOAT > 0 and "0."..("0"):rep(FLOAT)
         end
 
-        local BUFF_ACCURATE_ENABLE = false
+        local BUFF_ACCURATE = false
         if auto_acc then
             local function HF(x)
                 return (s - #tostring(x[#x])) + (x._dlen < 1 and s - #tostring(x[x._dlen] or "") or 0)
@@ -675,19 +646,15 @@ master.calculate = {
             else
                 error("[DIV] OVERFLOW | division function can't handle this number, or something went wrong.")
             end
-            if OPTION.MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS_BUFF_MODE then
-                BUFF_ACCURATE_ENABLE = true
-            end
         else
             accuracy = (l or ACCURACY_LIMIT.MASTER_CALCULATE_DIV_MAXITERATIONS) + 2
-            BUFF_ACCURATE_ENABLE = true
         end
 
-        local var_mirror = self._var_mirror
         local F_LIMIT = f or accuracy - 2
+        local B_LIMIT = ceil(accuracy / s)
         local function check(n)
             -- print("d =", d and masterD(d) or "nil")
-            local dc = d and var_mirror(d) or masterC(n, s)
+            local dc = d and setmetatable({d[1]}, {__index = d}) or masterC(n, s)
             -- print(masterD(dc), masterD(d and concat:right(dc, n, false, uc, true) or dc))
 
             local nc = self:mul(b, d and concat:right(dc, n, false, uc) or dc, s, true)
@@ -733,28 +700,20 @@ master.calculate = {
             -- print(high, low, code)
             return false, low
         end
-        if d then
-            if istableobj(d) then
-                local fp, bp = d[2], d[1]
-                accuracy = accuracy - masterD(bp)
-                d = {0, _size = s, _dlen = 1}
-                local SIZE = masterC(s, s)
-                while equation:less(bp, one) do
-                    bp = self:sub(bp, SIZE)
-                    if equation:less(bp, one) then
-                        for v in fp:gmatch(("."):rep(s)) do
-                            d._dlen = d._dlen - 1
-                            d[d._dlen] = tonumber(v)
-                        end
-                        break
-                    end
-                    d._dlen = d._dlen - 1
-                    d[d._dlen] = 0
+        do
+            ---@diagnostic disable-next-line: need-check-nil
+            local forcus = d:sub(1, 2) == "0." and d:sub(3, -1)
+            if forcus and #forcus > 0 then
+                uc = #forcus:match("^0*")
+                accuracy = accuracy - #forcus
+                if uc < #forcus then
+                    uc = 0
+                    d, lastpoint = masterC(d, s), lastpoint or tonumber(d:sub(-1, -1))
+                else
+                    d = nil
                 end
             else
-                d = d:sub(1, accuracy)
-                accuracy = accuracy - #(d:match("%.(.+)") or "")
-                d, lastpoint = masterC(d, s), lastpoint or d:match("(%d)0*$")
+                d, lastpoint = masterC(d, s), lastpoint or tonumber(d:sub(-1, -1))
             end
         end
         while accuracy > 0 do
@@ -791,14 +750,25 @@ master.calculate = {
         end
         -- Newton-Raphson --
         -- x = x * (2 - a * x)
-        if BUFF_ACCURATE_ENABLE then
-            local TWO = masterC(2, s)
-            for _ = 1, ACCURACY_LIMIT.MASTER_CALCULATE_DIV_BUFF_ACCURATE do
-                local rap = self:sub(TWO, self:mul(b, d))
-                if rap._dlen >= 1 then
+        local TWO = masterC(2, s)
+        for _ = 1, BUFF_ACCURATE or ACCURACY_LIMIT.MASTER_CALCULATE_DIV_BUFF_ACCURATE do
+            local rap = self:sub(TWO, self:mul(b, d))
+            d = self:mul(d, rap)
+
+            local breaktime = B_LIMIT
+            for i = 0, rap._dlen, -1 do
+                local v = rap[i]
+                if v ~= 0 then
                     break
+                else
+                    breaktime = breaktime - 1
+                    if breaktime <= 0 then
+                        break
+                    end
                 end
-                d = self:mul(d, rap)
+            end
+            if breaktime <= 0 then
+                break
             end
         end
         --------------------
@@ -1381,7 +1351,10 @@ local int = setmetatable({
     __index = mediaobj
 })
 
-int.new = function(...) -- (string|number) For only create. alway use default size! **CHUNK SIZE SHOULD BE SAME WHEN CALCULATE**
+---For create multiple int object in one times.
+---@param ... string|number
+---@return table
+int.new = function(...)
     local stack, em = {}, false
     for i, s in ipairs({...}) do
         stack[i], em = media.convert(s, int._defaultsize), true
@@ -1389,10 +1362,15 @@ int.new = function(...) -- (string|number) For only create. alway use default si
     if not em then
         return media.convert(0, int._defaultsize)
     end
+    ---@diagnostic disable-next-line: redundant-return-value
     return table.unpack(stack)
 end
 
-int.cnew = function(number, size) -- (number:string|number, size:string|number) For setting a size per chunk. **CHUNK SIZE SHOULD BE SAME WHEN CALCULATE**
+---For create int object and setting a size per chunk.
+---@param number string|number
+---@param size string|number
+---@return table
+int.cnew = function(number, size)
     return media.convert(number or 0, size and (tonumber(size) or master._config.SETINTEGER_PERCHUNK[size:upper()]) or int._defaultsize)
 end
 

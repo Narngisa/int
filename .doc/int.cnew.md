@@ -9,7 +9,11 @@
 *It is recommended to use string type as "number" input, also you can input number type.*
 
 ```lua
-function int.cnew(number, size) -- (number:string|number, size:string|number) For setting a size per chunk. **CHUNK SIZE SHOULD BE SAME WHEN CALCULATE**
+---For create int object and setting a size per chunk.
+---@param number string|number
+---@param size string|number
+---@return table
+function int.cnew(number, size)
 ```
 
 | Parameter | Type                        | Description                                                              |

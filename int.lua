@@ -8,15 +8,15 @@
 -- AUTHOR: SupTan85
 -- LICENSE: MIT (the same license as Lua itself)
 -- LINK: https://github.com/SupTan85/int.lua
--- 
+--
 ----------------------------------------------------
 
-local intcur =  -- 64 bit
-                (9223372036854775808 ~= 9223372036854775807     and     {9, "9223372036854775808"})     or -- Lua 5.2 >=
-                (72057594037927936 ~= 72057594037927935         and     {8, "72057594037927936"})       or
-                (9007199254740991 ~= 9007199254740990           and     {7, "9007199254740991"})        or -- Lua 5.1 ==
-                -- 32 bit
-                {4, "2147483648"}
+local intcur =                                                                                             -- 64 bit
+    (9223372036854775808 ~= 9223372036854775807 and { 9, "9223372036854775808" }) or                       -- Lua 5.2 >=
+    (72057594037927936 ~= 72057594037927935 and { 8, "72057594037927936" }) or
+    (9007199254740991 ~= 9007199254740990 and { 7, "9007199254740991" }) or                                -- Lua 5.1 ==
+    -- 32 bit
+    { 4, "2147483648" }
 
 local master = {
     _config = {
@@ -53,26 +53,26 @@ local master = {
         ACCURACY_LIMIT = {
             -- MASTER FUNCTION CONFIG --
             MASTER_CALCULATE_DIV_MAXITERATIONS = 15, -- 15
-            MASTER_CALCULATE_DIV_BUFF_ACCURATE = 4, -- 4
-            MASTER_DEFAULT_FRACT_LIMIT_DIV = 14, -- 14
+            MASTER_CALCULATE_DIV_BUFF_ACCURATE = 4,  -- 4
+            MASTER_DEFAULT_FRACT_LIMIT_DIV = 14,     -- 14
 
             -- MEDIA FUNCTION CONFIG --
-            MEDIA_DEFAULT_POWER_ACCURATE_LIMIT = 15, -- 15
-            MEDIA_DEFAULT_POWER_FRACT_LIMIT = 14, -- 14
+            MEDIA_DEFAULT_POWER_ACCURATE_LIMIT = 15,            -- 15
+            MEDIA_DEFAULT_POWER_FRACT_LIMIT = 14,               -- 14
 
             MEDIA_DEFAULT_NATURAL_LOGARITHM_MAXITERATIONS = 15, -- 15
-            MEDIA_DEFAULT_NATURAL_LOGARITHM_FRACT_LIMIT = 14, -- 14
+            MEDIA_DEFAULT_NATURAL_LOGARITHM_FRACT_LIMIT = 14,   -- 14
 
-            MEDIA_DEFAULT_EXPONENTIAL_MAXITERATIONS = 15, -- 15
-            MEDIA_DEFAULT_EXPONENTIAL_FRACT_LIMIT = 14, -- 14
+            MEDIA_DEFAULT_EXPONENTIAL_MAXITERATIONS = 15,       -- 15
+            MEDIA_DEFAULT_EXPONENTIAL_FRACT_LIMIT = 14,         -- 14
 
-            MEDIA_DEFAULT_SQRTROOT_MAXITERATIONS = 15, -- 15
-            MEDIA_DEFAULT_SQRTROOT_FRACT_LIMIT = 14, -- 14
+            MEDIA_DEFAULT_SQRTROOT_MAXITERATIONS = 15,          -- 15
+            MEDIA_DEFAULT_SQRTROOT_FRACT_LIMIT = 14,            -- 14
         },
         --#endregion
         -- SYSTEM CONFIG ! Internal use only, Do not modify. ! --
         MAXIMUM_SIZE_PERCHUNK = intcur[1], -- stable size is 9
-        MAXIMUM_LUA_INTEGER = intcur[2] -- math.maxinteger
+        MAXIMUM_LUA_INTEGER = intcur[2]    -- math.maxinteger
     },
 
     _VERSION = "186",
@@ -84,10 +84,10 @@ local ISDEBUG = false -- mute everything that can be mute.
 local OPTION = master._config.OPTION
 local ACCURACY_LIMIT = master._config.ACCURACY_LIMIT
 local OBJECT_CODENAME = "int object"
-local OBJECT_PROFILE = ({(OBJECT_CODENAME):gsub("%s+", "-")})[1] -- auto create profile
+local OBJECT_PROFILE = ({ (OBJECT_CODENAME):gsub("%s+", "-") })[1] -- auto create profile
 
 local CONSTANT_LN2_DLEN = math.min(math.max(intcur[1] * 2, 14), 18)
-local CONSTANT_LN2 = "0."..("693147180559945309"):sub(1, CONSTANT_LN2_DLEN)
+local CONSTANT_LN2 = "0." .. ("693147180559945309"):sub(1, CONSTANT_LN2_DLEN)
 
 ---@diagnostic disable-next-line: deprecated
 table.unpack = table.unpack or unpack
@@ -98,7 +98,7 @@ local function sign(number) -- Returns -1 if `x < 0`, 0 if `x == 0`, or 1 if `x 
 end
 
 local function istableobj(...) -- All value are table/int-object, else return false.
-    for _, v in ipairs({...}) do
+    for _, v in ipairs({ ... }) do
         local itype = type(v)
         if itype ~= OBJECT_CODENAME then
             if itype ~= "table" then
@@ -112,23 +112,30 @@ local function istableobj(...) -- All value are table/int-object, else return fa
 end
 
 master.convert = function(st, s)
-    assert(type(st) == "string" or type(st) == "number", ("[CONVERT] INVALID_INPUT_TYPE | attempt to convert with a '%s'."):format(type(st)))
-    assert(type(st) == "number" or st:find("^%d*%.?%d*$"), ("[CONVERT] MALFORMED_NUMBER | function not support number format or input wans't number format. (%s)"):format(st))
+    assert(type(st) == "string" or type(st) == "number",
+        ("[CONVERT] INVALID_INPUT_TYPE | attempt to convert with a '%s'."):format(type(st)))
+    assert(type(st) == "number" or st:find("^%d*%.?%d*$"),
+        ("[CONVERT] MALFORMED_NUMBER | function not support number format or input wans't number format. (%s)"):format(
+        st))
     st, s = tostring(st), s or 1
     assert(not (s <= 0), ("[CONVERT] SETTING_SIZE_ISSUE | size per chunk is less then one. (%s < 1)"):format(s))
-    assert(not (s > master._config.MAXIMUM_SIZE_PERCHUNK), ("[CONVERT] INVALID_SIZE_PERCHUNK | size per chunk is more then maxiumum setting. (%s > %s)"):format(s, master._config.MAXIMUM_SIZE_PERCHUNK))
-    local result, step = {_size = s}, 0
+    assert(not (s > master._config.MAXIMUM_SIZE_PERCHUNK),
+        ("[CONVERT] INVALID_SIZE_PERCHUNK | size per chunk is more then maxiumum setting. (%s > %s)"):format(s,
+            master._config.MAXIMUM_SIZE_PERCHUNK))
+    local result, step = { _size = s }, 0
     local i, i2 = st:match("^0*(%d*)%.?(%d-)0*$")
     i, i2 = (i or st):match("^0*(.-)$"):reverse(), i2 or ""
     local len_i, len_i2 = #i, #i2
     for index = 1, max(len_i, len_i2), s do
         step = step + 1
         if index <= len_i then
-            result[step] = tonumber(i:sub(index, min(index + s - 1, len_i)):reverse()) or error("[CONVERT] VOID_VALUE | attempt to convert but got 'nil'.")
+            result[step] = tonumber(i:sub(index, min(index + s - 1, len_i)):reverse()) or
+            error("[CONVERT] VOID_VALUE | attempt to convert but got 'nil'.")
         end
         if index <= len_i2 then
             local d = i2:sub(index, min(index + s - 1, len_i2))
-            result[1 - step] = tonumber(d .. ("0"):rep(s - #d)) or error("[CONVERT] VOID_VALUE | attempt to convert but got 'nil'.")
+            result[1 - step] = tonumber(d .. ("0"):rep(s - #d)) or
+            error("[CONVERT] VOID_VALUE | attempt to convert but got 'nil'.")
             result._dlen = 1 - step
         end
     end
@@ -138,14 +145,17 @@ end
 
 master.deconvert = function(x)
     -- BUILD 186.6
-    assert(istableobj(x or error("[DECONVERT] VOID_INPUT")), ("[DECONVERT] INVALID_INPUT_TYPE | attempt to deconvert with a '%s'."):format(type(x)))
+    assert(istableobj(x or error("[DECONVERT] VOID_INPUT")),
+        ("[DECONVERT] INVALID_INPUT_TYPE | attempt to deconvert with a '%s'."):format(type(x)))
     local chunk_size = x._size or 1
     local pattern_format = ("%%0%dd"):format(chunk_size)
     local chunk_decimal = {}
     local process = false
     for i = x._dlen or 1, 0 do
         local v = x[i] or error(("[DECONVERT] DAMAGED_OBJECT | missing decimal part value. index[%s]"):format(i))
-        assert(type(v) == "number", ("[DECONVERT] DAMAGED_OBJECT | detected invalid type in decimal part data. index[%s]: integer (not %s)"):format(i, type(v)))
+        assert(type(v) == "number",
+            ("[DECONVERT] DAMAGED_OBJECT | detected invalid type in decimal part data. index[%s]: integer (not %s)")
+            :format(i, type(v)))
         local target = -i + 2
         if process then
             chunk_decimal[target] = pattern_format:format(v)
@@ -161,7 +171,9 @@ master.deconvert = function(x)
     local chunk_integer = {}
     for i = #x, 1, -1 do
         local v = x[i] or error(("[DECONVERT] DAMAGED_OBJECT | missing integer path value. index[%s]"):format(i))
-        assert(type(v) == "number", ("[DECONVERT] DAMAGED_OBJECT | detected invalid type in integer part data. index[%s]: integer (not %s)"):format(i, type(v)))
+        assert(type(v) == "number",
+            ("[DECONVERT] DAMAGED_OBJECT | detected invalid type in integer part data. index[%s]: integer (not %s)")
+            :format(i, type(v)))
         local i = #x - i + 1
         if process then
             chunk_integer[i] = pattern_format:format(v)
@@ -172,7 +184,8 @@ master.deconvert = function(x)
             x[i] = nil
         end
     end
-    return (#chunk_integer > 0 and table.concat(chunk_integer) or "0")..(chunk_decimal[2] and table.concat(chunk_decimal) or "")
+    return (#chunk_integer > 0 and table.concat(chunk_integer) or "0") ..
+    (chunk_decimal[2] and table.concat(chunk_decimal) or "")
 end
 
 master.copy = function(x)
@@ -193,7 +206,8 @@ master.custom = {
         assert(type(length) == "number", ("[CFLOOR] INVALID_INPUT_TYPE | length: number (not %s)"):format(type(length)))
         if length < 0 or length % 1 ~= 0 then
             if ISDEBUG then
-                warn(("[CFLOOR] INVALID_INPUT | length: integer <positive> (current %s to %s)"):format(length, ceil(math.abs(length))))
+                warn(("[CFLOOR] INVALID_INPUT | length: integer <positive> (current %s to %s)"):format(length,
+                    ceil(math.abs(length))))
             end
             length = ceil(math.abs(length))
         end
@@ -258,7 +272,8 @@ master.custom = {
     end,
 
     _floor = function(x) -- Returns the largest integral value smaller than or equal to `x`.
-        assert(istableobj(x or error("[FLOOR] VOID_INPUT")), ("[FLOOR] INVALID_INPUT_TYPE | x: table/%s (not %s)"):format(OBJECT_PROFILE, type(x)))
+        assert(istableobj(x or error("[FLOOR] VOID_INPUT")),
+            ("[FLOOR] INVALID_INPUT_TYPE | x: table/%s (not %s)"):format(OBJECT_PROFILE, type(x)))
         for i = x._dlen or 1, 0 do
             x[i] = nil
         end
@@ -268,14 +283,16 @@ master.custom = {
 
     cfloor = function(self, x, length) -- Custom a `x` decimal part. *use ":" to call a function*
         assert(type(length) == "number", ("[CFLOOR] INVALID_INPUT_TYPE | length: number (not %s)"):format(type(length)))
-        assert(istableobj(x or error("[CFLOOR] VOID_INPUT")), ("[CFLOOR] INVALID_INPUT_TYPE | x: table/%s (not %s)"):format(OBJECT_PROFILE, type(x)))
+        assert(istableobj(x or error("[CFLOOR] VOID_INPUT")),
+            ("[CFLOOR] INVALID_INPUT_TYPE | x: table/%s (not %s)"):format(OBJECT_PROFILE, type(x)))
         return self._cfloor(x, length, true)
     end,
 
     cround = function(self, x, length, center) -- Custom a `x` decimal part, with automatic round system. (`center` The number of rounding centers) *use ":" to call a function*
         -- BUILD 186.7
         assert(type(length) == "number", ("[CROUND] INVALID_INPUT_TYPE | length: number (not %s)"):format(type(length)))
-        assert(istableobj(x or error("[CROUND] VOID_INPUT")), ("[CROUND] INVALID_INPUT_TYPE | x: table/%s (not %s)"):format(OBJECT_PROFILE, type(x)))
+        assert(istableobj(x or error("[CROUND] VOID_INPUT")),
+            ("[CROUND] INVALID_INPUT_TYPE | x: table/%s (not %s)"):format(OBJECT_PROFILE, type(x)))
         local s = x._size
         local x, endp, lastcut_num = self._cfloor(x, length)
         if endp < 1 and lastcut_num then
@@ -288,7 +305,8 @@ master.custom = {
 local custom = master.custom
 master.equation = {
     equal = function(self, x, y) -- chunk size should be same
-        assert((x._size or 1) == (y._size or 1), ("[EQUATION] INVALID_SIZE_PERCHUNK (%s, %s)"):format(x._size or 1, y._size or 1))
+        assert((x._size or 1) == (y._size or 1),
+            ("[EQUATION] INVALID_SIZE_PERCHUNK (%s, %s)"):format(x._size or 1, y._size or 1))
         if #x == #y and (x._dlen or 1) == (y._dlen or 1) then
             for i = x._dlen or 1, #x do
                 if x[i] ~= y[i] then
@@ -301,7 +319,8 @@ master.equation = {
     end,
     less = function(self, x, y) -- chunk size should be same
         -- BUILD 186.6
-        assert((x._size or 1) == (y._size or 1), ("[EQUATION] INVALID_SIZE_PERCHUNK (%s, %s)"):format(x._size or 1, y._size or 1))
+        assert((x._size or 1) == (y._size or 1),
+            ("[EQUATION] INVALID_SIZE_PERCHUNK (%s, %s)"):format(x._size or 1, y._size or 1))
         if #x < #y then
             return true
         elseif #x == #y then
@@ -321,10 +340,14 @@ master.equation = {
 
 master.concat = {
     _creq = function(self, x, y, force)
-        assert(type(self) == "table" and self._seek and self._deep, "[CONCAT] BAD_FUNCTIONCALL | can't include required function")
-        assert(x and y, ("[CONCAT] VOID_INPUT |%s%s"):format(not x and " x: nil (input-required)" or "", not y and " y: nil (input-required)" or ""))
+        assert(type(self) == "table" and self._seek and self._deep,
+            "[CONCAT] BAD_FUNCTIONCALL | can't include required function")
+        assert(x and y,
+            ("[CONCAT] VOID_INPUT |%s%s"):format(not x and " x: nil (input-required)" or "",
+                not y and " y: nil (input-required)" or ""))
         assert(istableobj(x), ("[CONCAT] INVALID_INPUT_TYPE | x: table/%s (not %s)"):format(OBJECT_CODENAME, type(x)))
-        assert(force or (istableobj(y) and (y._dlen or 1) >= 1) or (not istableobj(y) and tonumber(y) % 1 == 0), "[CONCAT] INVALID_INPUT | y: integer (not decimal)")
+        assert(force or (istableobj(y) and (y._dlen or 1) >= 1) or (not istableobj(y) and tonumber(y) % 1 == 0),
+            "[CONCAT] INVALID_INPUT | y: integer (not decimal)")
         return true
     end,
 
@@ -353,7 +376,9 @@ master.concat = {
 
     _seek = function(var, reqsize, offset, reverse, ignore) -- set and gets number position.
         -- BUILD 186.3
-        assert(var and reqsize, ("[SEEK] VOID_INPUT |%s%s"):format(not var and " var: nil (input-required)" or "", not reqsize and " reqsize: nil (input-required)" or ""))
+        assert(var and reqsize,
+            ("[SEEK] VOID_INPUT |%s%s"):format(not var and " var: nil (input-required)" or "",
+                not reqsize and " reqsize: nil (input-required)" or ""))
         assert(tonumber(reqsize), ("[SEEK] INVALID_INPUT | reqsize: integer (not %s)"):format(type(reqsize)))
         reqsize = tonumber(reqsize)
         assert(reqsize % 1 == 0, "[SEEK] INVALID_INPUT | reqsize: integer (not decimal)")
@@ -384,13 +409,14 @@ master.concat = {
                 local i = reverse and (dlen - i) + vlen or i
                 local curr = tostring(var[i] or "")
                 if i ~= vlen then
-                    curr = ("0"):rep(size - #curr)..curr
+                    curr = ("0"):rep(size - #curr) .. curr
                 end
                 if not ignore and i == dlen and dlen < 1 then
                     curr = curr:match("^(.-)0*$")
                 end
                 local bsize = #curr
-                local include = curr:sub(reverse and -(shift + reqsize) or shift + 1, reverse and -(shift + 1) or shift + reqsize)
+                local include = curr:sub(reverse and -(shift + reqsize) or shift + 1,
+                    reverse and -(shift + 1) or shift + reqsize)
                 if pindex or #include > 0 then
                     pindex = reverse and (pindex or 1) - 1 or (pindex or 0) + 1
                     result[pindex] = include
@@ -403,13 +429,15 @@ master.concat = {
             return table.concat(result, nil, reverse and pindex or nil)
         end
         local result = tostring(var)
-        result = ignore and result:gsub("%.", "") or (result:match("^0*(%d+).?%d?") or "0")..(result:match("%d%.(%d*)0*$") or "")
+        result = ignore and result:gsub("%.", "") or
+        (result:match("^0*(%d+).?%d?") or "0") .. (result:match("%d%.(%d*)0*$") or "")
         return result:sub(reverse and -(offset + reqsize) or offset + 1, reverse and -(offset + 1) or offset + reqsize)
     end,
 
     left = function(self, x, y, ignore, shift, copy, force)
         -- BUILD 186.3
-        assert(type(self) == "table" and self._creq and self:_creq(x, y, force), "[CONCAT] BAD_FUNCTIONCALL | can't include required function")
+        assert(type(self) == "table" and self._creq and self:_creq(x, y, force),
+            "[CONCAT] BAD_FUNCTIONCALL | can't include required function")
         x = copy and master.copy(x) or x
         shift = max(tonumber(shift) or 0, 0)
         local i, istable = (not ignore and #x or self._deep(x)), istableobj(y)
@@ -434,12 +462,12 @@ master.concat = {
             end
             if ishift > 0 then
                 local zshift = min(size - #curr, ishift)
-                curr = ("0"):rep(zshift)..curr
+                curr = ("0"):rep(zshift) .. curr
                 ishift = max(ishift - zshift, 0)
             end
             local nreq = size - #curr - ishift
             local ireq = self._seek(y, nreq, offset, true, istable)
-            x[i] = tonumber(ireq..curr) or 0
+            x[i] = tonumber(ireq .. curr) or 0
             i, offset = i + 1, offset + #ireq
         until #ireq ~= nreq and ishift <= 0
         return x
@@ -447,7 +475,8 @@ master.concat = {
 
     right = function(self, x, y, ignore, shift, copy, force)
         -- BUILD 186.3
-        assert(type(self) == "table" and self._creq and self:_creq(x, y, force), "[CONCAT] BAD_FUNCTIONCALL | can't include required function")
+        assert(type(self) == "table" and self._creq and self:_creq(x, y, force),
+            "[CONCAT] BAD_FUNCTIONCALL | can't include required function")
         x = copy and master.copy(x) or x
         shift = max(tonumber(shift) or 0, 0)
         local dlen = x._dlen or 1
@@ -469,16 +498,16 @@ master.concat = {
                 curr = curr:match("^(.-)0*$")
             elseif ignore or xlogic then
                 local raw = curr:match("^(.-)0*$")
-                curr = ("0"):rep(size - #curr)..raw
+                curr = ("0"):rep(size - #curr) .. raw
             end
             if ishift > 0 then
                 local zshift = min(size - #curr, ishift)
-                curr = curr..("0"):rep(zshift)
+                curr = curr .. ("0"):rep(zshift)
                 ishift = max(ishift - zshift, 0)
             end
             local nreq = size - #curr - ishift
             local ireq = self._seek(y, nreq, offset, false, istable)
-            x[i] = tonumber(curr..ireq..("0"):rep(size - (#curr + #ireq))) or 0
+            x[i] = tonumber(curr .. ireq .. ("0"):rep(size - (#curr + #ireq))) or 0
             i, offset = i - 1, offset + #ireq
         until #ireq ~= nreq and ishift <= 0
         x._dlen = self._deep(x, true, i + 1)
@@ -488,15 +517,22 @@ master.concat = {
 
 master.calculate = {
     _verify = function(a, b, MAXIUMUM_SIZE, CODE_NAME)
-        assert(a and b, ("[%s] VOID_INPUT |%s%s"):format(CODE_NAME or "UNKNOW", not a and " a: nil (input-required)" or "", not b and " b: nil (input-required)" or ""))
-        assert(istableobj(a, b), ("[%s] INVALID_INPUT |%s%s"):format(CODE_NAME or "UNKNOW", istableobj(a) and "" or (" a: table/%s (not %s)"):format(OBJECT_PROFILE, type(a)), istableobj(b) and "" or (" b: table/%s (not %s)"):format(OBJECT_PROFILE, type(b))))
-        assert((a._size or 1) == (b._size or 1), ("[%s] INVALID_SIZE_PERCHUNK | _size: (%s != %s)"):format(CODE_NAME or "UNKNOW", a._size or 1, b._size or 1))
-        assert(not ((a._size or 1) > MAXIUMUM_SIZE), ("[%s] INVALID_SIZE_PERCHUNK | _size: (%s > %s)"):format(CODE_NAME or "UNKNOW", a._size or 1, MAXIUMUM_SIZE))
+        assert(a and b,
+            ("[%s] VOID_INPUT |%s%s"):format(CODE_NAME or "UNKNOWN", not a and " a: nil (input-required)" or "",
+                not b and " b: nil (input-required)" or ""))
+        assert(istableobj(a, b),
+            ("[%s] INVALID_INPUT |%s%s"):format(CODE_NAME or "UNKNOWN",
+                istableobj(a) and "" or (" a: table/%s (not %s)"):format(OBJECT_PROFILE, type(a)),
+                istableobj(b) and "" or (" b: table/%s (not %s)"):format(OBJECT_PROFILE, type(b))))
+        assert((a._size or 1) == (b._size or 1),
+            ("[%s] INVALID_SIZE_PERCHUNK | _size: (%s != %s)"):format(CODE_NAME or "UNKNOWN", a._size or 1, b._size or 1))
+        assert(not ((a._size or 1) > MAXIUMUM_SIZE),
+            ("[%s] INVALID_SIZE_PERCHUNK | _size: (%s > %s)"):format(CODE_NAME or "UNKNOWN", a._size or 1, MAXIUMUM_SIZE))
     end,
 
-    add = function(self, a, b, s)  -- _size maxiumum *2 **chunk size should be same**
+    add = function(self, a, b, s) -- _size maxiumum *2 **chunk size should be same**
         self._verify(a, b, master._config.MAXIMUM_SIZE_PERCHUNK * 2, "ADD")
-        local result = {_size = a._size or s or 1}
+        local result = { _size = a._size or s or 1 }
         local s, c, d = floor(10 ^ (result._size)), false, false
         for i = min(a._dlen or 1, b._dlen or 1), max(#a, #b) do
             local chunk_result = (a[i] or 0) + (b[i] or 0)
@@ -512,9 +548,9 @@ master.calculate = {
         end
         return result
     end,
-    sub = function(self, a, b, s)  -- _size maxiumum *2 (to use this function `a >= b` else result will been wrong!) **chunk size should be same**
+    sub = function(self, a, b, s) -- _size maxiumum *2 (to use this function `a >= b` else result will been wrong!) **chunk size should be same**
         self._verify(a, b, master._config.MAXIMUM_SIZE_PERCHUNK * 2, "SUB")
-        local result = {_size = a._size or s or 1}
+        local result = { _size = a._size or s or 1 }
         local s, d = floor(10 ^ (result._size)), false
         local bottom_trim = false
         for i = min(a._dlen or 1, b._dlen or 1), max(#a, #b) do
@@ -527,7 +563,8 @@ master.calculate = {
                 result._dlen, d = (i < 1 and i) or 1, true
             end
             result[i + 1] = (callback < 0 and (floor((callback % s) / s) + (((callback % s) ~= 0 and 1) or 0))) or nil
-            result[i + 1] = (chunk_result < 0 and (result[i + 1] or 0) + (floor((chunk_result % s) / s) + (((chunk_result % s) ~= 0 and 1) or 0))) or result[i + 1]
+            result[i + 1] = (chunk_result < 0 and (result[i + 1] or 0) + (floor((chunk_result % s) / s) + (((chunk_result % s) ~= 0 and 1) or 0))) or
+            result[i + 1]
         end
         for i = #result, 1, -1 do
             if result[i] == 0 then
@@ -542,7 +579,7 @@ master.calculate = {
     mul = function(self, a, b, s, e) -- _size maxiumum *1 (`e` switch for division process.) **chunk size should be same**
         -- BUILD 186.7
         self._verify(a, b, master._config.MAXIMUM_SIZE_PERCHUNK, "MUL")
-        local result = {_size = a._size or s or 1}
+        local result = { _size = a._size or s or 1 }
         local s, bottom = floor(10 ^ (result._size)), (a._dlen or 1) + (b._dlen or 1) - 1
         for i = #a, a._dlen or 1, -1 do
             local BA = a[i]
@@ -605,21 +642,26 @@ master.calculate = {
         -- BUILD 186.7
         self._verify(a, b, master._config.MAXIMUM_SIZE_PERCHUNK, "DIV")
         assert(not master.equation:equal(b, masterC(0, b._size or 1)), "[DIV] INVALID_INPUT | divisor cannot be zero.")
-        local s, b_dlen, fv = a._size or s or 1, b._dlen or 1, f or (not OPTION.MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS and ACCURACY_LIMIT.MASTER_DEFAULT_FRACT_LIMIT_DIV or 0)
-        local auto_acc, equation, concat = not l and OPTION.MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS, master.equation, master.concat
+        local s, b_dlen, fv = a._size or s or 1, b._dlen or 1,
+            f or
+            (not OPTION.MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS and ACCURACY_LIMIT.MASTER_DEFAULT_FRACT_LIMIT_DIV or 0)
+        local auto_acc, equation, concat = not l and OPTION.MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS, master.equation,
+            master.concat
         local one = masterC(1, s)
         local accuracy, uc = 0, 0
         local lastpoint, fin, mark
-        local shift_mul = b_dlen < 1 and masterC("1"..("0"):rep((math.abs(min(b_dlen, 0)) * s) + #tostring(b[b_dlen])), s)
+        local shift_mul = b_dlen < 1 and
+        masterC("1" .. ("0"):rep((math.abs(min(b_dlen, 0)) * s) + #tostring(b[b_dlen])), s)
         b = shift_mul and self:mul(b, shift_mul) or b
         local d = OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT and (function(b)
             local p = b == "1" and "1" or tostring("1" / b)
             if p:find("e") then
                 local L, R = p:match("^(%d-%.?%d+)e"), p:match("e%-?0*(%d+)$")
-                L, lastpoint = #L >= 4 and L:sub(1, -2) or L, #L >= 4 and L:sub(-2, -2) or (#L > 1 and L:sub(-1, -1) or L)
+                L, lastpoint = #L >= 4 and L:sub(1, -2) or L,
+                    #L >= 4 and L:sub(-2, -2) or (#L > 1 and L:sub(-1, -1) or L)
                 -- print(p, L, R, lastpoint)
                 local S = #L:match("^(%d+)%.?")
-                return ("0."..("0"):rep(tonumber(R) - S)..(#L > 1 and L:gsub("%.", "") or L)):sub(1, -2)
+                return ("0." .. ("0"):rep(tonumber(R) - S) .. (#L > 1 and L:gsub("%.", "") or L)):sub(1, -2)
             elseif p ~= "0.0" and p ~= "0" then
                 if #p > 13 then
                     p = p:sub(1, -2)
@@ -631,7 +673,7 @@ master.calculate = {
         end)(masterD(b))
         if not d then
             local FLOAT = ((#b - 1) * s) + #tostring(b[#b]) - 2
-            d = FLOAT > 0 and "0."..("0"):rep(FLOAT)
+            d = FLOAT > 0 and "0." .. ("0"):rep(FLOAT)
         end
 
         local BUFF_ACCURATE = false
@@ -654,7 +696,7 @@ master.calculate = {
         local B_LIMIT = ceil(accuracy / s)
         local function check(n)
             -- print("d =", d and masterD(d) or "nil")
-            local dc = d and setmetatable({d[1]}, {__index = d}) or masterC(n, s)
+            local dc = d and setmetatable({ d[1] }, { __index = d }) or masterC(n, s)
             -- print(masterD(dc), masterD(d and concat:right(dc, n, false, uc, true) or dc))
 
             local nc = self:mul(b, d and concat:right(dc, n, false, uc) or dc, s, true)
@@ -663,7 +705,7 @@ master.calculate = {
             --     print(masterD(b), masterD(d and concat:right(dc, n, false, uc) or dc))
             --     error(err)
             -- end
-            
+
             if equation:more(nc, one) then
                 return 1
             elseif equation:less(nc, one) then
@@ -678,7 +720,7 @@ master.calculate = {
                     map[i + 1] = (i % 2 ~= 0 and (c - ceil(i / 2)) or (c + ceil(i / 2))) % 10
                 end
             else
-                map = {0, 1, 9, 2, 8, 3, 7, 4, 6, 5}
+                map = { 0, 1, 9, 2, 8, 3, 7, 4, 6, 5 }
             end
             local high, low, code
             for i = 1, 10 do
@@ -722,15 +764,19 @@ master.calculate = {
             if not lp then
                 if master._config.OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT then
                     if ISDEBUG then
-                        io.write(("\n[DIV] VALIDATION_FAILED | issues detected in division function, main process is unable to find the correct result.\n\tFUNCTION LOG >>\nprocess: (%s / %s)\nraw_data: %s\n\n"):format((a and masterD(a)) or "ERROR", (b and masterD(b)) or "ERROR", (d and masterD(d)) or "ERROR"))
-                        io.write("\n[DIV] VALIDATION_FAILED | issues detected in division function, main process is unable to find the correct result while using the option <MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT>.\nmodule will automatically disable this option permanent and recalculate the result again. some versions of Lua cannot using this option!\nset: master._config.OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT = false\n")
+                        io.write(("\n[DIV] VALIDATION_FAILED | issues detected in division function, main process is unable to find the correct result.\n\tFUNCTION LOG >>\nprocess: (%s / %s)\nraw_data: %s\n\n")
+                        :format((a and masterD(a)) or "ERROR", (b and masterD(b)) or "ERROR",
+                            (d and masterD(d)) or "ERROR"))
+                        io.write(
+                        "\n[DIV] VALIDATION_FAILED | issues detected in division function, main process is unable to find the correct result while using the option <MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT>.\nmodule will automatically disable this option permanent and recalculate the result again. some versions of Lua cannot using this option!\nset: master._config.OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT = false\n")
                     end
                     master._config.OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT = false
                     return master.calculate:div(a, b, s, f, l)
                 end
-                error(("[DIV] VALIDATION_FAILED | issues detected in division function, main process is unable to find the correct result.\n\tFUNCTION LOG >>\nprocess: (%s / %s)\nraw_data: %s\n"):format(
-                    a and masterD(a) or "ERROR", 
-                    b and masterD(b) or "ERROR", 
+                error(("[DIV] VALIDATION_FAILED | issues detected in division function, main process is unable to find the correct result.\n\tFUNCTION LOG >>\nprocess: (%s / %s)\nraw_data: %s\n")
+                :format(
+                    a and masterD(a) or "ERROR",
+                    b and masterD(b) or "ERROR",
                     d and masterD(d) or "ERROR"
                 ))
             end
@@ -786,7 +832,7 @@ master.calculate = {
 local media = {
     assets = {
         FSZero = function(...) -- update sign to plus when number is zero, for fix issue *zero*
-            local pack, cahce = {...}, nil
+            local pack, cahce = { ... }, nil
             for i, v in ipairs(pack) do
                 cahce = cahce or masterC(0, v._size)
                 pack[i]._sign = master.equation:equal(v, cahce) and "+" or v._sign or "+"
@@ -819,10 +865,12 @@ local media = {
     convert = function(n, size) -- automatic setup a table.
         n = n or 0
         local n_type = type(n)
-        assert(n_type == "string" or n_type == "number", ("[CONVERT] INVALID_INPUT_TYPE | n: string|number (not %s)"):format(n_type))
+        assert(n_type == "string" or n_type == "number",
+            ("[CONVERT] INVALID_INPUT_TYPE | n: string|number (not %s)"):format(n_type))
         if tostring(n):find("e") then
             n, n_type = tostring(n), "string"
-            local es, fs = tonumber(n:match("^%s*[+-]?%d+%.?%d*e([+-]?%d+)%s*$")), n:match("^%s*([+-]?%d+%.?%d*)e[+-]?%d+%s*$")
+            local es, fs = tonumber(n:match("^%s*[+-]?%d+%.?%d*e([+-]?%d+)%s*$")),
+                n:match("^%s*([+-]?%d+%.?%d*)e[+-]?%d+%s*$")
             if es and fs then
                 if es ~= 0 then
                     local loc = (fs:find("%.") or (#fs + 1)) - 1
@@ -830,12 +878,12 @@ local media = {
                     local f, b
                     fs = fs:gsub("%.", ""):gsub("[+-]", "")
                     if dot < 0 then
-                        f, b = "0", ("0"):rep(-dot)..fs
+                        f, b = "0", ("0"):rep(-dot) .. fs
                     else
-                        fs = fs..("0"):rep(dot - #fs)
+                        fs = fs .. ("0"):rep(dot - #fs)
                         f, b = fs:sub(1, dot):match("^0*(.*)$"), fs:sub(dot + 1, -1):match("^(.-)0*$")
                     end
-                    fs = fs_sign..(f == "" and "0" or f)..(b ~= "" and "."..b or "")
+                    fs = fs_sign .. (f == "" and "0" or f) .. (b ~= "" and "." .. b or "")
                 end
                 local t = masterC(fs:match("^%s*[+-]?(%d+%.?%d*)%s*$"), size)
                 t._sign = fs:match("^%s*([+-]?)") or "+"
@@ -843,13 +891,15 @@ local media = {
             end
             error(("[CONVERT] VALIDATION_FAILED | malformed number near '%s'"):format(n:match("^%s*(.-)%s*$")))
         end
-        local t = masterC(n_type == "string" and n:match("^%s*[+-]?(%d+%.?%d*)%s*$") or math.abs(tonumber(n) or error(("[CONVERT] MALFORMED_NUMBER '%s'"):format(n))), size)
+        local t = masterC(
+        n_type == "string" and n:match("^%s*[+-]?(%d+%.?%d*)%s*$") or
+        math.abs(tonumber(n) or error(("[CONVERT] MALFORMED_NUMBER '%s'"):format(n))), size)
         t._sign = n_type == "string" and (n:match("^%s*([+-])") or "+") or sign(n) < 0 and "-" or "+"
         return setmetatable(t, master._metatable)
     end,
     tostring = function(int) -- Deconvert table to string.
         local str = masterD(int)
-        return (int._sign == "-" and str ~= "0" and "-" or "")..str
+        return (int._sign == "-" and str ~= "0" and "-" or "") .. str
     end,
 
     abs = function(x, self_changed) -- Returns the absolute value of `x`.
@@ -901,7 +951,8 @@ local media = {
 
     ceil = function(x) -- Returns the smallest integer greater than or equal to `x`.
         assert(x, "[CEIL] VOID_INPUT")
-        return ((x._sign or "+") == "+" and (x._dlen or 1) < 1 and 1 or 0) + setmetatable(custom._floor(x), master._metatable)
+        return ((x._sign or "+") == "+" and (x._dlen or 1) < 1 and 1 or 0) +
+        setmetatable(custom._floor(x), master._metatable)
     end
 }
 
@@ -909,21 +960,26 @@ local assets = media.assets
 function media.equal(x, y) -- work same `equation:equal` but support sign config.
     assert(x and y, "[EQUAL] INPUT_VOID")
     local ze, equation = masterC(0, x._size), master.equation
-    return (equation:equal(x, ze) and "+" or x._sign) == (equation:equal(y, ze) and "+" or y._sign) and equation:equal(x, y)
+    return (equation:equal(x, ze) and "+" or x._sign) == (equation:equal(y, ze) and "+" or y._sign) and
+    equation:equal(x, y)
 end
+
 function media.less(x, y) -- work same `equation:less` but support sign config.
     assert(x and y, "[EQUAL] INPUT_VOID")
     local xs, ys = assets.FSZero(x, y)
     xs, ys = xs._sign, ys._sign
     local nox = xs ~= ys
-    return nox and xs == "-" or (not nox and (xs == "-" and master.equation:more(x, y) or (xs ~= "-" and master.equation:less(x, y))))
+    return nox and xs == "-" or
+    (not nox and (xs == "-" and master.equation:more(x, y) or (xs ~= "-" and master.equation:less(x, y))))
 end
+
 function media.more(x, y) -- work same `equation:more` but support sign config.
     assert(x and y, "[EQUAL] INPUT_VOID")
     local xs, ys = assets.FSZero(x, y)
     xs, ys = xs._sign, ys._sign
     local nox = xs ~= ys
-    return nox and xs == "+" or (not nox and (xs == "+" and master.equation:more(x, y) or (xs ~= "+" and master.equation:less(x, y))))
+    return nox and xs == "+" or
+    (not nox and (xs == "+" and master.equation:more(x, y) or (xs ~= "+" and master.equation:less(x, y))))
 end
 
 function media.integerlen(x, return_number) -- Returns number integer digits, that was in object.
@@ -934,6 +990,7 @@ function media.integerlen(x, return_number) -- Returns number integer digits, th
     end
     return #tostring(x[le] or "") + ((media.convert(le, x._size) - 1):max(0) * x._size)
 end
+
 function media.decimallen(x, return_number) -- Returns number decimal digits, that was in object.
     -- BUILD 186.7
     assert(x, "[DECIMAL_LEN] VOID_INPUT")
@@ -949,6 +1006,7 @@ function media.decimallen(x, return_number) -- Returns number decimal digits, th
         return return_number and 0 or media.convert(0, size)
     end
 end
+
 function media.fdigitlen(x) -- Returns sum of number integer digits and number decimal digits.
     assert(x, "[FULLDIGIT_LEN] VOID_INPUT")
     return media.integerlen(x) + media.decimallen(x)
@@ -957,7 +1015,8 @@ end
 function media.cround(x, length) -- Custom a `x` decimal part, with automatic round system.
     -- BUILD 186.7
     ---@diagnostic disable-next-line: param-type-mismatch
-    return setmetatable(custom:cround(x, length and (length < 0 and media.decimallen(x, true) + length or length) or 0), master._metatable)
+    return setmetatable(custom:cround(x, length and (length < 0 and media.decimallen(x, true) + length or length) or 0),
+        master._metatable)
 end
 
 function media.tonumber(x) -- Deconvert table to number. *not recommend*
@@ -965,8 +1024,8 @@ function media.tonumber(x) -- Deconvert table to number. *not recommend*
 end
 
 function assets.vtype(...) -- asset for vtype function.
-    local stack, v = {...}, {...}
-    local SOFT, INTEGER = {table = 1}, master._config.SETINTEGER_PERCHUNK.DEFAULT
+    local stack, v = { ... }, { ... }
+    local SOFT, INTEGER = { table = 1 }, master._config.SETINTEGER_PERCHUNK.DEFAULT
     table.sort(v, function(a, b) return (SOFT[type(a)] or 0) > (SOFT[type(b)] or 0) end)
     for _, s in ipairs(v) do
         if istableobj(s) then
@@ -977,7 +1036,7 @@ function assets.vtype(...) -- asset for vtype function.
     end
     for i, s in ipairs(stack) do
         local ty = type(s)
-        if ty == "string" or ty =="number" then
+        if ty == "string" or ty == "number" then
             stack[i] = media.convert(s, INTEGER)
         elseif istableobj(s) then
             stack[i] = s
@@ -987,6 +1046,7 @@ function assets.vtype(...) -- asset for vtype function.
     end
     return stack
 end
+
 function media.vtype(...) -- This function make table can mix a number and string.
     return table.unpack(assets.vtype(...))
 end
@@ -1047,8 +1107,9 @@ function media.exp(x, f, l) -- Returns the Exponential of `x`. (`f` The maxiumum
     end
 
     local result, term = media.convert(1, SIZE), media.convert(1, SIZE)
-    local TOLERANCE = f and max(ACCURACY_LIMIT.MEDIA_DEFAULT_EXPONENTIAL_FRACT_LIMIT, f) or ACCURACY_LIMIT.MEDIA_DEFAULT_EXPONENTIAL_FRACT_LIMIT
-    local TOLERANCE_OBJINT = media.convert(TOLERANCE > 0 and "0."..("0"):rep(TOLERANCE - 1).."1" or 1, x._size)
+    local TOLERANCE = f and max(ACCURACY_LIMIT.MEDIA_DEFAULT_EXPONENTIAL_FRACT_LIMIT, f) or
+    ACCURACY_LIMIT.MEDIA_DEFAULT_EXPONENTIAL_FRACT_LIMIT
+    local TOLERANCE_OBJINT = media.convert(TOLERANCE > 0 and "0." .. ("0"):rep(TOLERANCE - 1) .. "1" or 1, x._size)
     TOLERANCE = max(0, TOLERANCE)
     for n = 1, l or ACCURACY_LIMIT.MEDIA_DEFAULT_EXPONENTIAL_MAXITERATIONS do
         term = custom:cround((term * x) / n, TOLERANCE)
@@ -1057,7 +1118,7 @@ function media.exp(x, f, l) -- Returns the Exponential of `x`. (`f` The maxiumum
             break
         end
     end
-    
+
     for _ = 1, k do
         result = custom:cround(result * result, TOLERANCE)
     end
@@ -1095,8 +1156,9 @@ function media.ln(x, f, l) -- Returns the Natural logarithm of `x` in the given 
     local z_squared = z * z
     local term, result = z, z
 
-    local TOLERANCE = f and max(ACCURACY_LIMIT.MEDIA_DEFAULT_NATURAL_LOGARITHM_FRACT_LIMIT, f) or ACCURACY_LIMIT.MEDIA_DEFAULT_NATURAL_LOGARITHM_FRACT_LIMIT
-    local TOLERANCE_OBJINT = media.convert(TOLERANCE > 0 and "0."..("0"):rep(TOLERANCE - 1).."1" or 1, x._size)
+    local TOLERANCE = f and max(ACCURACY_LIMIT.MEDIA_DEFAULT_NATURAL_LOGARITHM_FRACT_LIMIT, f) or
+    ACCURACY_LIMIT.MEDIA_DEFAULT_NATURAL_LOGARITHM_FRACT_LIMIT
+    local TOLERANCE_OBJINT = media.convert(TOLERANCE > 0 and "0." .. ("0"):rep(TOLERANCE - 1) .. "1" or 1, x._size)
     TOLERANCE = max(0, TOLERANCE)
 
     local CC_TOLERANCE = max(TOLERANCE, CONSTANT_LN2_DLEN) + 2
@@ -1114,7 +1176,7 @@ end
 
 function media.modf(x) -- Returns the integral part of `x` and the decimal part of `x`.
     x = media.vtype(x or error("[MODF] VOID_INPUT"))
-    local frac = {_sign = x._sign or "+", _dlen = x._dlen or 1, _size = x._size}
+    local frac = { _sign = x._sign or "+", _dlen = x._dlen or 1, _size = x._size }
     for i = frac._dlen, 0 do
         frac[i] = x[i]
     end
@@ -1129,7 +1191,8 @@ end
 
 function assets.vpow(self, x, y, l) -- pow function assets. `y >= 0`
     assert(x and y, "[VPOW] VOID_INPUT")
-    assert(y._sign == "+" or (y._dlen >= 1 and #y <= 1 and (y[1] or 0) == 0), ("[VPOW] FUNCTION_NOT_SUPPORT | y (%s) is less then 0."):format(tostring(y)))
+    assert(y._sign == "+" or (y._dlen >= 1 and #y <= 1 and (y[1] or 0) == 0),
+        ("[VPOW] FUNCTION_NOT_SUPPORT | y (%s) is less then 0."):format(tostring(y)))
     if y._dlen >= 1 then
         if self.EQMatch(y, 0) then
             return media.convert(1, x._size)
@@ -1162,7 +1225,8 @@ function media.pow(x, y, f, l) -- Returns `x ^ y`. (`f` The maxiumum number of d
 
     local x_sign = x._sign or "+"
     if x._sign == "-" then
-        assert(y._dlen >= 1, ("[POW] INVALID_INPUT | A negative base can only be raised to an integer exponent. (%s)"):format(tostring(y)))
+        assert(y._dlen >= 1,
+            ("[POW] INVALID_INPUT | A negative base can only be raised to an integer exponent. (%s)"):format(tostring(y)))
         if (y[1] or 0) % 2 == 0 then
             x._sign = "+"
         end
@@ -1170,7 +1234,9 @@ function media.pow(x, y, f, l) -- Returns `x ^ y`. (`f` The maxiumum number of d
     local y_sign = y._sign
     y._sign, l = "+", l or ACCURACY_LIMIT.MEDIA_DEFAULT_POWER_ACCURATE_LIMIT
 
-    local result = y_sign == "-" and media.cdiv(1, assets:vpow(x, y, l), f or ACCURACY_LIMIT.MEDIA_DEFAULT_POWER_FRACT_LIMIT, l) or custom:cfloor(assets:vpow(x, y, l), l)
+    local result = y_sign == "-" and
+    media.cdiv(1, assets:vpow(x, y, l), f or ACCURACY_LIMIT.MEDIA_DEFAULT_POWER_FRACT_LIMIT, l) or
+    custom:cfloor(assets:vpow(x, y, l), l)
     x._sign, y._sign = x_sign, y_sign
     return result
 end
@@ -1181,13 +1247,15 @@ function media.sqrt(x, f, l) -- Returns the Square root of `x`. (`f` The maxiumu
     local zero = media.convert(0, x._size)
     -- Newton's Method --
     assert(x:eqmore(zero), "[SQRT] INVALID_INPUT | Cannot compute the square root of a negative number.")
-    assert(not f or type(f) == "number", ("[SQRT] INVALID_INPUT_TYPE | Type of maxiumum number of decimal part should be integer (not %s)"):format(type(f)))
+    assert(not f or type(f) == "number",
+        ("[SQRT] INVALID_INPUT_TYPE | Type of maxiumum number of decimal part should be integer (not %s)"):format(type(f)))
     if #x <= 1 and (x[#x] or 0) == 0 and (x._dlen or 1) == 1 then
         return zero
     end
     local res = x
-    local TOLERANCE = f and max(ACCURACY_LIMIT.MEDIA_DEFAULT_SQRTROOT_FRACT_LIMIT, f) or ACCURACY_LIMIT.MEDIA_DEFAULT_SQRTROOT_FRACT_LIMIT
-    local TOLERANCE_OBJINT = media.convert(TOLERANCE > 0 and "0."..("0"):rep(TOLERANCE - 1).."1" or 1, x._size)
+    local TOLERANCE = f and max(ACCURACY_LIMIT.MEDIA_DEFAULT_SQRTROOT_FRACT_LIMIT, f) or
+    ACCURACY_LIMIT.MEDIA_DEFAULT_SQRTROOT_FRACT_LIMIT
+    local TOLERANCE_OBJINT = media.convert(TOLERANCE > 0 and "0." .. ("0"):rep(TOLERANCE - 1) .. "1" or 1, x._size)
     TOLERANCE = max(0, TOLERANCE)
     for _ = 1, max(l or ACCURACY_LIMIT.MEDIA_DEFAULT_SQRTROOT_MAXITERATIONS, 1) do
         local next_res = (res + custom:cround(x / res, TOLERANCE)) * 0.5
@@ -1235,12 +1303,21 @@ local mediaobj = {
 
     abs = media.abs,
 
-    sign = media.sign,  fact = media.fact,  pow = media.pow,
-    max = media.max,    ln = media.ln,      floor = media.floor,
-    min = media.min,    exp = media.exp,    cround = media.cround,
+    sign = media.sign,
+    fact = media.fact,
+    pow = media.pow,
+    max = media.max,
+    ln = media.ln,
+    floor = media.floor,
+    min = media.min,
+    exp = media.exp,
+    cround = media.cround,
 
-    ceil = media.ceil,  fmod = media.fmod,  unm = media.unm,
-    modf = media.modf,  sqrt = media.sqrt,
+    ceil = media.ceil,
+    fmod = media.fmod,
+    unm = media.unm,
+    modf = media.modf,
+    sqrt = media.sqrt,
 
     integerlen = media.integerlen,
     decimallen = media.decimallen,
@@ -1259,14 +1336,14 @@ do
 
         cal = master.calculate,
         equ = master.equation,
-        
+
         div = media.cdiv,
         unm = media.unm,
 
         -- this not include sign --
         equal = media.equal,
         less = media.less,
-        
+
         setmetatable = setmetatable,
         assert = assert
     }
@@ -1288,7 +1365,7 @@ do
             raw._sign = (reg and x or y)._sign or "+"
             return setmetatable(raw, master._metatable)
         end,
-        __sub = function (x, y)
+        __sub = function(x, y)
             _ENV.assert(x and y, "[SUB] VOID_INPUT")
             x, y = _ENV.vtype(x, y)
             local reg = _ENV.equ:more(x, y)
@@ -1356,7 +1433,7 @@ local int = setmetatable({
 ---@return table
 int.new = function(...)
     local stack, em = {}, false
-    for i, s in ipairs({...}) do
+    for i, s in ipairs({ ... }) do
         stack[i], em = media.convert(s, int._defaultsize), true
     end
     if not em then
@@ -1371,7 +1448,8 @@ end
 ---@param size string|number
 ---@return table
 int.cnew = function(number, size)
-    return media.convert(number or 0, size and (tonumber(size) or master._config.SETINTEGER_PERCHUNK[size:upper()]) or int._defaultsize)
+    return media.convert(number or 0,
+        size and (tonumber(size) or master._config.SETINTEGER_PERCHUNK[size:upper()]) or int._defaultsize)
 end
 
 -- print(("MODULE LOADED\nMEMORY USAGE: %.0d B (%s KB)"):format(collectgarbage("count") * 1024, collectgarbage("count")))

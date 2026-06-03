@@ -645,7 +645,7 @@ master.calculate = {
         return result
     end,
 
-    div = function(self, a, b, s, f, l) -- _size maxiumum *1 (`f` The maxiumum number of decimal part, `l` The maximum number of iterations to perform.) **chunk size should be same**
+    div = function(self, a, b, s, f, l, _bypass) -- _size maxiumum *1 (`f` The maxiumum number of decimal part, `l` The maximum number of iterations to perform.) **chunk size should be same**
         -- BUILD 186.7
         self._verify(a, b, master._config.MAXIMUM_SIZE_PERCHUNK, "DIV")
         assert(not master.equation:equal(b, masterC(0, b._size or 1)), "[DIV] INVALID_INPUT | divisor cannot be zero.")
@@ -660,7 +660,8 @@ master.calculate = {
         local shift_mul = b_dlen < 1 and
             masterC("1" .. ("0"):rep((math.abs(min(b_dlen, 0)) * s) + #tostring(b[b_dlen])), s)
         b = shift_mul and self:mul(b, shift_mul) or b
-        local d = OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT and (function(b)
+        local use_bypass = OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT
+        local d = use_bypass and (function(b)
             local p = b == "1" and "1" or tostring("1" / b)
             if p:find("e") then
                 local L, R = p:match("^(%d-%.?%d+)e"), p:match("e%-?0*(%d+)$")
@@ -769,7 +770,7 @@ master.calculate = {
             local dv, lp = calcu(lastpoint)
             -- issue checker >>
             if not lp then
-                if master._config.OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT then
+                if use_bypass then
                     if ISDEBUG then
                         io.write(("\n[DIV] VALIDATION_FAILED | issues detected in division function, main process is unable to find the correct result.\n\tFUNCTION LOG >>\nprocess: (%s / %s)\nraw_data: %s\n\n")
                             :format((a and masterD(a)) or "ERROR", (b and masterD(b)) or "ERROR",
@@ -777,8 +778,7 @@ master.calculate = {
                         io.write(
                             "\n[DIV] VALIDATION_FAILED | issues detected in division function, main process is unable to find the correct result while using the option <MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT>.\nmodule will automatically disable this option permanent and recalculate the result again. some versions of Lua cannot using this option!\nset: master._config.OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT = false\n")
                     end
-                    master._config.OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT = false
-                    return master.calculate:div(a, b, s, f, l)
+                    return master.calculate:div(a, b, s, f, l, false)
                 end
                 error(("[DIV] VALIDATION_FAILED | issues detected in division function, main process is unable to find the correct result.\n\tFUNCTION LOG >>\nprocess: (%s / %s)\nraw_data: %s\n")
                     :format(

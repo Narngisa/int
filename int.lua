@@ -972,7 +972,7 @@ function media.equal(x, y) -- work same `equation:equal` but support sign config
 end
 
 function media.less(x, y) -- work same `equation:less` but support sign config.
-    assert(x and y, "[EQUAL] INPUT_VOID")
+    assert(x and y, "[LESS] INPUT_VOID")
     local xs, ys = assets.FSZero(x, y)
     xs, ys = xs._sign, ys._sign
     local nox = xs ~= ys
@@ -981,7 +981,7 @@ function media.less(x, y) -- work same `equation:less` but support sign config.
 end
 
 function media.more(x, y) -- work same `equation:more` but support sign config.
-    assert(x and y, "[EQUAL] INPUT_VOID")
+    assert(x and y, "[MORE] INPUT_VOID")
     local xs, ys = assets.FSZero(x, y)
     xs, ys = xs._sign, ys._sign
     local nox = xs ~= ys
@@ -1138,10 +1138,10 @@ end
 
 function media.ln(x, f, l) -- Returns the Natural logarithm of `x` in the given base. (`f` The maxiumum number of decimal part, `l` The maximum number of iterations to perform.)
     -- BUILD 186.7 (Range Reduction + AHT Series)
-    x = media.vtype(x) or error("[IN] VOID_INPUT")
+    x = media.vtype(x) or error("[LN] VOID_INPUT")
     if tostring(x) <= "0" then
-        assert(tostring(x) ~= "0", "[IN] INVALID_INPUT | Natural logarithm function return inf-positive value.")
-        error("[IN] INVALID_INPUT | Natural logarithm function return non-positive value.")
+        assert(tostring(x) ~= "0", "[LN] INVALID_INPUT | Natural logarithm function return inf-positive value.")
+        error("[LN] INVALID_INPUT | Natural logarithm function return non-positive value.")
     end
 
     local SIZE, EQ = x._size, master.equation

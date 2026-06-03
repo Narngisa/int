@@ -353,7 +353,7 @@ master.concat = {
 
     _deep = function(var, reverse, dlen) -- Returns number of chunk, that are start first.
         -- BUILD 186.3
-        local dlen = dlen or var._dlen or 1
+        dlen = dlen or var._dlen or 1
         while var[dlen - 1] do
             dlen = dlen - 1
         end

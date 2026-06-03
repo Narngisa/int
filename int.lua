@@ -218,9 +218,9 @@ master.custom = {
             local shift = s - (length % s)
             if shift < s then
                 local lastcut = -shift
-                lastcut_num = tostring(x[new_dlen]):sub(lastcut, lastcut)
+                lastcut_num = tostring(x[new_dlen] or 0):sub(lastcut, lastcut)
 
-                local new_value = floor(x[new_dlen] * (10 ^ -shift)) * floor(10 ^ shift)
+                local new_value = floor((x[new_dlen] or 0) * (10 ^ -shift)) * floor(10 ^ shift)
                 if new_value == 0 then
                     x[new_dlen] = nil
                     new_dlen = new_dlen + 1

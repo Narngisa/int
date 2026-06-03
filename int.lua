@@ -659,7 +659,7 @@ master.calculate = {
         local lastpoint, fin, mark
         local shift_mul = b_dlen < 1 and
             masterC("1" .. ("0"):rep((math.abs(min(b_dlen, 0)) * s) + #tostring(b[b_dlen])), s)
-        b = shift_mul and self:mul(b, shift_mul) or b
+        b = shift_mul and self:mul(master.copy(b), shift_mul) or b
         local use_bypass = OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT
         local d = use_bypass and (function(b)
             local p = b == "1" and "1" or tostring("1" / b)

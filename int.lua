@@ -11,10 +11,10 @@
 --
 ----------------------------------------------------
 
-local intcur =                                                                                             -- 64 bit
-    (9223372036854775808 ~= 9223372036854775807 and { 9, "9223372036854775808" }) or                       -- Lua 5.2 >=
+local intcur =                                                                       -- 64 bit
+    (9223372036854775808 ~= 9223372036854775807 and { 9, "9223372036854775808" }) or -- Lua 5.2 >=
     (72057594037927936 ~= 72057594037927935 and { 8, "72057594037927936" }) or
-    (9007199254740991 ~= 9007199254740990 and { 7, "9007199254740991" }) or                                -- Lua 5.1 ==
+    (9007199254740991 ~= 9007199254740990 and { 7, "9007199254740991" }) or          -- Lua 5.1 ==
     -- 32 bit
     { 4, "2147483648" }
 
@@ -116,7 +116,7 @@ master.convert = function(st, s)
         ("[CONVERT] INVALID_INPUT_TYPE | attempt to convert with a '%s'."):format(type(st)))
     assert(type(st) == "number" or st:find("^%d*%.?%d*$"),
         ("[CONVERT] MALFORMED_NUMBER | function not support number format or input wans't number format. (%s)"):format(
-        st))
+            st))
     st, s = tostring(st), s or 1
     assert(not (s <= 0), ("[CONVERT] SETTING_SIZE_ISSUE | size per chunk is less then one. (%s < 1)"):format(s))
     assert(not (s > master._config.MAXIMUM_SIZE_PERCHUNK),
@@ -130,12 +130,12 @@ master.convert = function(st, s)
         step = step + 1
         if index <= len_i then
             result[step] = tonumber(i:sub(index, min(index + s - 1, len_i)):reverse()) or
-            error("[CONVERT] VOID_VALUE | attempt to convert but got 'nil'.")
+                error("[CONVERT] VOID_VALUE | attempt to convert but got 'nil'.")
         end
         if index <= len_i2 then
             local d = i2:sub(index, min(index + s - 1, len_i2))
             result[1 - step] = tonumber(d .. ("0"):rep(s - #d)) or
-            error("[CONVERT] VOID_VALUE | attempt to convert but got 'nil'.")
+                error("[CONVERT] VOID_VALUE | attempt to convert but got 'nil'.")
             result._dlen = 1 - step
         end
     end
@@ -185,7 +185,7 @@ master.deconvert = function(x)
         end
     end
     return (#chunk_integer > 0 and table.concat(chunk_integer) or "0") ..
-    (chunk_decimal[2] and table.concat(chunk_decimal) or "")
+        (chunk_decimal[2] and table.concat(chunk_decimal) or "")
 end
 
 master.copy = function(x)
@@ -430,7 +430,7 @@ master.concat = {
         end
         local result = tostring(var)
         result = ignore and result:gsub("%.", "") or
-        (result:match("^0*(%d+).?%d?") or "0") .. (result:match("%d%.(%d*)0*$") or "")
+            (result:match("^0*(%d+).?%d?") or "0") .. (result:match("%d%.(%d*)0*$") or "")
         return result:sub(reverse and -(offset + reqsize) or offset + 1, reverse and -(offset + 1) or offset + reqsize)
     end,
 
@@ -553,19 +553,26 @@ master.calculate = {
         local result = { _size = a._size or s or 1 }
         local s, d = floor(10 ^ (result._size)), false
         local bottom_trim = false
+        local borrow = 0
+
         for i = min(a._dlen or 1, b._dlen or 1), max(#a, #b) do
-            local chunk_result = (a[i] or 0) - (b[i] or 0)
-            local callback = (chunk_result % s) - (result[i] or 0)
-            local chunk_data = callback % s
+            local chunk_result = (a[i] or 0) - (b[i] or 0) - borrow
+
+            if chunk_result < 0 then
+                borrow = 1
+                chunk_result = chunk_result + s
+            else
+                borrow = 0
+            end
+
+            local chunk_data = chunk_result % s
             bottom_trim = bottom_trim or chunk_data ~= 0
             result[i] = bottom_trim and chunk_data or nil
             if not d and bottom_trim then
                 result._dlen, d = (i < 1 and i) or 1, true
             end
-            result[i + 1] = (callback < 0 and (floor((callback % s) / s) + (((callback % s) ~= 0 and 1) or 0))) or nil
-            result[i + 1] = (chunk_result < 0 and (result[i + 1] or 0) + (floor((chunk_result % s) / s) + (((chunk_result % s) ~= 0 and 1) or 0))) or
-            result[i + 1]
         end
+
         for i = #result, 1, -1 do
             if result[i] == 0 then
                 result[i] = nil
@@ -651,7 +658,7 @@ master.calculate = {
         local accuracy, uc = 0, 0
         local lastpoint, fin, mark
         local shift_mul = b_dlen < 1 and
-        masterC("1" .. ("0"):rep((math.abs(min(b_dlen, 0)) * s) + #tostring(b[b_dlen])), s)
+            masterC("1" .. ("0"):rep((math.abs(min(b_dlen, 0)) * s) + #tostring(b[b_dlen])), s)
         b = shift_mul and self:mul(b, shift_mul) or b
         local d = OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT and (function(b)
             local p = b == "1" and "1" or tostring("1" / b)
@@ -765,20 +772,20 @@ master.calculate = {
                 if master._config.OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT then
                     if ISDEBUG then
                         io.write(("\n[DIV] VALIDATION_FAILED | issues detected in division function, main process is unable to find the correct result.\n\tFUNCTION LOG >>\nprocess: (%s / %s)\nraw_data: %s\n\n")
-                        :format((a and masterD(a)) or "ERROR", (b and masterD(b)) or "ERROR",
-                            (d and masterD(d)) or "ERROR"))
+                            :format((a and masterD(a)) or "ERROR", (b and masterD(b)) or "ERROR",
+                                (d and masterD(d)) or "ERROR"))
                         io.write(
-                        "\n[DIV] VALIDATION_FAILED | issues detected in division function, main process is unable to find the correct result while using the option <MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT>.\nmodule will automatically disable this option permanent and recalculate the result again. some versions of Lua cannot using this option!\nset: master._config.OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT = false\n")
+                            "\n[DIV] VALIDATION_FAILED | issues detected in division function, main process is unable to find the correct result while using the option <MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT>.\nmodule will automatically disable this option permanent and recalculate the result again. some versions of Lua cannot using this option!\nset: master._config.OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT = false\n")
                     end
                     master._config.OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT = false
                     return master.calculate:div(a, b, s, f, l)
                 end
                 error(("[DIV] VALIDATION_FAILED | issues detected in division function, main process is unable to find the correct result.\n\tFUNCTION LOG >>\nprocess: (%s / %s)\nraw_data: %s\n")
-                :format(
-                    a and masterD(a) or "ERROR",
-                    b and masterD(b) or "ERROR",
-                    d and masterD(d) or "ERROR"
-                ))
+                    :format(
+                        a and masterD(a) or "ERROR",
+                        b and masterD(b) or "ERROR",
+                        d and masterD(d) or "ERROR"
+                    ))
             end
             -- print((d and masterD(d)) or "ERROR")
             -- issue checker <<
@@ -892,8 +899,8 @@ local media = {
             error(("[CONVERT] VALIDATION_FAILED | malformed number near '%s'"):format(n:match("^%s*(.-)%s*$")))
         end
         local t = masterC(
-        n_type == "string" and n:match("^%s*[+-]?(%d+%.?%d*)%s*$") or
-        math.abs(tonumber(n) or error(("[CONVERT] MALFORMED_NUMBER '%s'"):format(n))), size)
+            n_type == "string" and n:match("^%s*[+-]?(%d+%.?%d*)%s*$") or
+            math.abs(tonumber(n) or error(("[CONVERT] MALFORMED_NUMBER '%s'"):format(n))), size)
         t._sign = n_type == "string" and (n:match("^%s*([+-])") or "+") or sign(n) < 0 and "-" or "+"
         return setmetatable(t, master._metatable)
     end,
@@ -952,7 +959,7 @@ local media = {
     ceil = function(x) -- Returns the smallest integer greater than or equal to `x`.
         assert(x, "[CEIL] VOID_INPUT")
         return ((x._sign or "+") == "+" and (x._dlen or 1) < 1 and 1 or 0) +
-        setmetatable(custom._floor(x), master._metatable)
+            setmetatable(custom._floor(x), master._metatable)
     end
 }
 
@@ -961,7 +968,7 @@ function media.equal(x, y) -- work same `equation:equal` but support sign config
     assert(x and y, "[EQUAL] INPUT_VOID")
     local ze, equation = masterC(0, x._size), master.equation
     return (equation:equal(x, ze) and "+" or x._sign) == (equation:equal(y, ze) and "+" or y._sign) and
-    equation:equal(x, y)
+        equation:equal(x, y)
 end
 
 function media.less(x, y) -- work same `equation:less` but support sign config.
@@ -970,7 +977,7 @@ function media.less(x, y) -- work same `equation:less` but support sign config.
     xs, ys = xs._sign, ys._sign
     local nox = xs ~= ys
     return nox and xs == "-" or
-    (not nox and (xs == "-" and master.equation:more(x, y) or (xs ~= "-" and master.equation:less(x, y))))
+        (not nox and (xs == "-" and master.equation:more(x, y) or (xs ~= "-" and master.equation:less(x, y))))
 end
 
 function media.more(x, y) -- work same `equation:more` but support sign config.
@@ -979,7 +986,7 @@ function media.more(x, y) -- work same `equation:more` but support sign config.
     xs, ys = xs._sign, ys._sign
     local nox = xs ~= ys
     return nox and xs == "+" or
-    (not nox and (xs == "+" and master.equation:more(x, y) or (xs ~= "+" and master.equation:less(x, y))))
+        (not nox and (xs == "+" and master.equation:more(x, y) or (xs ~= "+" and master.equation:less(x, y))))
 end
 
 function media.integerlen(x, return_number) -- Returns number integer digits, that was in object.
@@ -1108,7 +1115,7 @@ function media.exp(x, f, l) -- Returns the Exponential of `x`. (`f` The maxiumum
 
     local result, term = media.convert(1, SIZE), media.convert(1, SIZE)
     local TOLERANCE = f and max(ACCURACY_LIMIT.MEDIA_DEFAULT_EXPONENTIAL_FRACT_LIMIT, f) or
-    ACCURACY_LIMIT.MEDIA_DEFAULT_EXPONENTIAL_FRACT_LIMIT
+        ACCURACY_LIMIT.MEDIA_DEFAULT_EXPONENTIAL_FRACT_LIMIT
     local TOLERANCE_OBJINT = media.convert(TOLERANCE > 0 and "0." .. ("0"):rep(TOLERANCE - 1) .. "1" or 1, x._size)
     TOLERANCE = max(0, TOLERANCE)
     for n = 1, l or ACCURACY_LIMIT.MEDIA_DEFAULT_EXPONENTIAL_MAXITERATIONS do
@@ -1157,7 +1164,7 @@ function media.ln(x, f, l) -- Returns the Natural logarithm of `x` in the given 
     local term, result = z, z
 
     local TOLERANCE = f and max(ACCURACY_LIMIT.MEDIA_DEFAULT_NATURAL_LOGARITHM_FRACT_LIMIT, f) or
-    ACCURACY_LIMIT.MEDIA_DEFAULT_NATURAL_LOGARITHM_FRACT_LIMIT
+        ACCURACY_LIMIT.MEDIA_DEFAULT_NATURAL_LOGARITHM_FRACT_LIMIT
     local TOLERANCE_OBJINT = media.convert(TOLERANCE > 0 and "0." .. ("0"):rep(TOLERANCE - 1) .. "1" or 1, x._size)
     TOLERANCE = max(0, TOLERANCE)
 
@@ -1235,8 +1242,8 @@ function media.pow(x, y, f, l) -- Returns `x ^ y`. (`f` The maxiumum number of d
     y._sign, l = "+", l or ACCURACY_LIMIT.MEDIA_DEFAULT_POWER_ACCURATE_LIMIT
 
     local result = y_sign == "-" and
-    media.cdiv(1, assets:vpow(x, y, l), f or ACCURACY_LIMIT.MEDIA_DEFAULT_POWER_FRACT_LIMIT, l) or
-    custom:cfloor(assets:vpow(x, y, l), l)
+        media.cdiv(1, assets:vpow(x, y, l), f or ACCURACY_LIMIT.MEDIA_DEFAULT_POWER_FRACT_LIMIT, l) or
+        custom:cfloor(assets:vpow(x, y, l), l)
     x._sign, y._sign = x_sign, y_sign
     return result
 end
@@ -1254,7 +1261,7 @@ function media.sqrt(x, f, l) -- Returns the Square root of `x`. (`f` The maxiumu
     end
     local res = x
     local TOLERANCE = f and max(ACCURACY_LIMIT.MEDIA_DEFAULT_SQRTROOT_FRACT_LIMIT, f) or
-    ACCURACY_LIMIT.MEDIA_DEFAULT_SQRTROOT_FRACT_LIMIT
+        ACCURACY_LIMIT.MEDIA_DEFAULT_SQRTROOT_FRACT_LIMIT
     local TOLERANCE_OBJINT = media.convert(TOLERANCE > 0 and "0." .. ("0"):rep(TOLERANCE - 1) .. "1" or 1, x._size)
     TOLERANCE = max(0, TOLERANCE)
     for _ = 1, max(l or ACCURACY_LIMIT.MEDIA_DEFAULT_SQRTROOT_MAXITERATIONS, 1) do

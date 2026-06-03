@@ -1,10 +1,10 @@
 local log = io.open("testsuite.log", "w")
 local print = function(...)
     if log then
-        for _, v in ipairs({...}) do
+        for _, v in ipairs({ ... }) do
             local value = tostring(v)
             local shift = 8 - (#value % 8)
-            log:write(value..(" "):rep(shift))
+            log:write(value .. (" "):rep(shift))
         end
         log:write("\n")
     end
@@ -15,7 +15,7 @@ local import_time = os.clock()
 local int = require("int") -- import module
 
 os.execute("cls")
-print(("\nOpen TestSuite.\nUsing module version: %s (%s)"):format(int._VERSION or "UNKNOW", _VERSION))
+print(("\nOpen TestSuite.\nUsing module version: %s (%s)"):format(int._VERSION or "UNKNOWN", _VERSION))
 print(("Import time: %ss"):format(tostring(os.clock() - import_time)))
 local INT_LEN = arg[2] and tonumber(arg[2]:match("(%d+)$")) or 10
 local DEC_LEN = arg[3] and tonumber(arg[3]:match("(%d+)$")) or 10
@@ -33,15 +33,15 @@ local function create_simple(override_int, override_dec)
     for _ = 1, override_int or INT_LEN do
         local ran_num = math.random(0, 9)
         if #simple ~= 0 or ran_num ~= 0 then
-            simple[#simple+1] = ran_num
+            simple[#simple + 1] = ran_num
         end
     end
     if DEC_LEN > 0 then
-        simple[#simple+1] = "."
+        simple[#simple + 1] = "."
         for _ = 1, override_dec or DEC_LEN do
             local ran_num = math.random(0, 9)
             if #simple ~= 0 or ran_num ~= 0 then
-                simple[#simple+1] = ran_num
+                simple[#simple + 1] = ran_num
             end
         end
     end
@@ -49,21 +49,21 @@ local function create_simple(override_int, override_dec)
 end
 
 local function benchmark(head, function_call, function_arg, override_int, override_dec)
-    print("SELECT FUNCTION: "..string.upper(head))
+    print("SELECT FUNCTION: " .. string.upper(head))
     if override_int then
-        print("INT_LEN OVERRIDE! SET TO: "..tostring(override_int))
+        print("INT_LEN OVERRIDE! SET TO: " .. tostring(override_int))
     end
     if override_dec then
-        print("INT_DEC OVERRIDE! SET TO: "..tostring(override_dec))
+        print("INT_DEC OVERRIDE! SET TO: " .. tostring(override_dec))
     end
-    local avg = {i = 0, avg = 0}
+    local avg = { i = 0, avg = 0 }
     local operation_start = os.clock()
     local result_table = function_arg and {}
     for i = 1, SIMPLE_PERSUITE do
         local x, y = create_simple(override_int, override_dec), create_simple(override_int, override_dec)
         local start = os.clock()
         if result_table then
-            result_table[(#result_table % 20) + 1] = {x, y, int.tonumber(function_call(x, y))}
+            result_table[(#result_table % 20) + 1] = { x, y, int.tonumber(function_call(x, y)) }
         else
             function_call(x, y)
         end
@@ -74,7 +74,12 @@ local function benchmark(head, function_call, function_arg, override_int, overri
         end
         avg[avg.i + 1], avg.i = res, avg.i + 1
         if not arg[4] then
-            io.write("\r"..bar..(" "):rep(((5 - bar:len()) % 5) + 3), ("[%s] %.2f %% (%d ms) | using: %s"):format(i == SIMPLE_PERSUITE and "/" or ("/-\\|"):sub((((math.floor((i / SIMPLE_PERSUITE) * 500))) % 4) + 1, ((math.floor((i / SIMPLE_PERSUITE) * 500)) % 4) + 1), (i / SIMPLE_PERSUITE) * 100, math.floor(res * 1000), math.floor(collectgarbage("count") * 1024).." Byte"))
+            io.write("\r" .. bar .. (" "):rep(((5 - bar:len()) % 5) + 3),
+                ("[%s] %.2f %% (%d ms) | using: %s"):format(
+                i == SIMPLE_PERSUITE and "/" or
+                ("/-\\|"):sub((((math.floor((i / SIMPLE_PERSUITE) * 500))) % 4) + 1,
+                    ((math.floor((i / SIMPLE_PERSUITE) * 500)) % 4) + 1), (i / SIMPLE_PERSUITE) * 100,
+                    math.floor(res * 1000), math.floor(collectgarbage("count") * 1024) .. " Byte"))
         end
     end
     local operation_time = os.clock() - operation_start
@@ -82,7 +87,8 @@ local function benchmark(head, function_call, function_arg, override_int, overri
         avg.avg = avg.avg + v
     end
     local per = math.floor((avg.avg / #avg) * 1000)
-    print(((arg[4] and "" or "\n").."Operation time: %.3fs (%s per time)"):format(operation_time, (tostring(per) == "inf" and "> 1ms") or (tostring(per) == "0" and "< 1ms") or per.."ms"))
+    print(((arg[4] and "" or "\n") .. "Operation time: %.3fs (%s per time)"):format(operation_time,
+        (tostring(per) == "inf" and "> 1ms") or (tostring(per) == "0" and "< 1ms") or per .. "ms"))
     if result_table then
         print(("Loss Average: %s\n"):format(function_arg(result_table)))
     end
@@ -90,9 +96,9 @@ end
 
 local function format_result(value)
     local i, d = value:match("(%d+).?(%d*)")
-    local result = ("0"):rep(INT_LEN - #i)..i..(d ~= "" and "."..d..("0"):rep(DEC_LEN - #d) or "")
+    local result = ("0"):rep(INT_LEN - #i) .. i .. (d ~= "" and "." .. d .. ("0"):rep(DEC_LEN - #d) or "")
     if #result > 40 then
-        result = result:sub(1, 40).."..."
+        result = result:sub(1, 40) .. "..."
     end
     return result
 end
@@ -175,7 +181,8 @@ if not suite_select or suite_select == 1 then
         local ix, iy = int.new(x, y)
         local result = ix:tostring() == x and iy:tostring() == y
         if not result then
-            error("\nfailed: deconvert result is incorrect!\n\n"..("\t%s =? %s\n\t%s =? %s\n"):format(ix:tostring(), x, iy:tostring(), y))
+            error("\nfailed: deconvert result is incorrect!\n\n" ..
+            ("\t%s =? %s\n\t%s =? %s\n"):format(ix:tostring(), x, iy:tostring(), y))
         end
         return result
     end)

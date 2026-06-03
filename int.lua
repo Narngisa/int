@@ -809,7 +809,7 @@ master.calculate = {
             d = self:mul(d, rap)
 
             local breaktime = B_LIMIT
-            for i = 0, rap._dlen, -1 do
+            for i = rap._dlen or 0, -1 do
                 local v = rap[i]
                 if v ~= 0 then
                     break

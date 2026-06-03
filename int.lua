@@ -948,10 +948,28 @@ local media = {
         assert(istableobj(x), ("[FLOOR] INVALID_INPUT_TYPE | x: table/%s (not %s)"):format(OBJECT_PROFILE, type(x)))
         if x._sign == "-" then
             if length then
-                ---@diagnostic disable-next-line: param-type-mismatch
-                return setmetatable(custom:cround(x, length, 0), master._metatable)
+                local x_copy = master.copy(x)
+                local floored, endp, lastcut = custom._cfloor(x.copy, length)
+
+                if lastcut and lastcut > 0 then
+                    local s = x._sign or 1
+                    local ulp = masterC("0." .. ("0"):rep(length - 1) .. "1", s)
+                    local raw = master.calculate:add(floored, ulp)
+                    raw._sign = "-"
+                    return setmetatable(raw, master._metatable)
+                end
+                floored._sign = "-"
+                return setmetatable(floored, master._metatable)
             end
-            return -((x._dlen or 1) < 1 and 1 or 0) + setmetatable(custom._floor(x), master._metatable)
+            local has_decimal = (x._dlen or 1) < 1
+            local raw = master.copy(x)
+            custom._floor(raw)
+            raw._sign = "-"
+            local result = setmetatable(raw, master._metatable)
+            if has_decimal then
+                result = result - 1
+            end
+            return result
         end
         return setmetatable(length and custom:cfloor(x, length) or custom._floor(x), master._metatable)
     end,
